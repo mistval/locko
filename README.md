@@ -1,6 +1,6 @@
 # Locko
 
-Locko is small package for locking critical sections of code.
+Locko is a small package for locking critical sections of code.
 
 ## When to use
 
