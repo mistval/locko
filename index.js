@@ -1,6 +1,18 @@
 const lockPromiseForKey = {};
 const unlockFunctionForKey = {};
 
+function createNextLock(key) {
+  return () => new Promise((fulfill) => {
+    unlockFunctionForKey[key] = () => {
+      if (--lockPromiseForKey[key][0] === 0) {
+        delete lockPromiseForKey[key];
+      }
+
+      fulfill();
+    };
+  });
+}
+
 /**
  * Take out a lock. When this function returns (asynchronously),
  * you have the lock.
@@ -8,15 +20,16 @@ const unlockFunctionForKey = {};
  *   tries to lock on the same key will need to wait for it to
  *   be unlocked.
  */
-async function lock(key) {
+function lock(key) {
   if (!lockPromiseForKey[key]) {
-    lockPromiseForKey[key] = Promise.resolve();
+    lockPromiseForKey[key] = [0, Promise.resolve()];
   }
 
-  const takeLockPromise = lockPromiseForKey[key];
-  lockPromiseForKey[key] = takeLockPromise.then(() => new Promise((fulfill) => {
-    unlockFunctionForKey[key] = fulfill;
-  }));
+  const [count, takeLockPromise] = lockPromiseForKey[key];
+  lockPromiseForKey[key] = [
+    count + 1,
+    takeLockPromise.then(createNextLock(key)),
+  ];
 
   return takeLockPromise;
 }
