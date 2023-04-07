@@ -1,11 +1,12 @@
 {
   "name": "locko",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "A simple in-process locking mechanism for critical sections of code.",
   "main": "index.js",
   "scripts": {
     "test": "mocha ./tests.js",
-    "lint": "./node_modules/.bin/eslint ."
+    "lint": "./node_modules/.bin/eslint .",
+    "lintfix": "./node_modules/.bin/eslint --fix ."
   },
   "repository": {
     "type": "git",

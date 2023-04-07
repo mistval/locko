@@ -4,7 +4,8 @@ const unlockFunctionForKey = {};
 function createNextLock(key) {
   return () => new Promise((fulfill) => {
     unlockFunctionForKey[key] = () => {
-      if (--lockPromiseForKey[key][0] === 0) {
+      lockPromiseForKey[key][0] -= 1;
+      if (lockPromiseForKey[key][0] === 0) {
         delete lockPromiseForKey[key];
       }
 
@@ -47,7 +48,25 @@ function unlock(key) {
   }
 }
 
+/**
+ * Acquire a lock, do an action, and then release the lock.
+ * This is a helper function that combines lock() and unlock()
+ * in a safe way.
+ * @param {string} key
+ * @param {function} fn
+ * @returns Whatever fn returns
+ */
+async function doWithLock(key, fn) {
+  await lock(key);
+  try {
+    return await fn();
+  } finally {
+    unlock(key);
+  }
+}
+
 module.exports = {
   lock,
   unlock,
+  doWithLock,
 };

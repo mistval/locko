@@ -1,23 +1,20 @@
 # Locko
 
-Locko is a small package for locking critical sections of code.
+Locko is a small package for implementing exclusive locking on critical sections of code.
 
 ## When to use
 
 Use locko when you need to ensure that only one "thread" can be inside of a section of code at once. Consider the following code.
 
 ```js
-function wait(ms) {
-  return new Promise((fulfill) => {
-    setTimeout(fulfill, ms);
-  });
-}
+const util = require('util');
+const sleep = util.promisify(setTimeout);
 
 async function print() {
   console.log('First');
-  await wait(100);
+  await sleep(100);
   console.log('Second');
-  await wait(100);
+  await sleep(100);
   console.log('Third');
 }
 
@@ -43,21 +40,16 @@ Third
 Now add locko:
 
 ```js
-const locko = require('locko');
-
-function wait(ms) {
-  return new Promise((fulfill) => {
-    setTimeout(fulfill, ms);
-  });
-}
+const util = require('util');
+const sleep = util.promisify(setTimeout);
 
 async function print() {
   await locko.lock('print');
 
   console.log('First');
-  await wait(100);
+  await sleep(100);
   console.log('Second');
-  await wait(100);
+  await sleep(100);
   console.log('Third');
 
   locko.unlock('print');
@@ -124,7 +116,7 @@ async function writeFile(filePath, content) {
 
 ## Best practices
 
-If you never unlock the lock, it will remain locked forever. Therefore you should usually use a try-catch to ensure that the lock gets released. For example:
+If you never unlock the lock, it will remain locked forever. Therefore you should usually use a try-finally to ensure that the lock gets released. For example:
 
 ```js
 async function print() {
@@ -136,12 +128,22 @@ async function print() {
     console.log('Second');
     await wait(100);
     console.log('Third');
-
+  } finally {
     locko.unlock('print');
-  } catch (err) {
-    locko.unlock('print');
-    throw err;
   }
 }
 ```
 
+Alternatively, you can use the `doWithLock()` wrapper function that handles unlocking safely for you:
+
+```js
+async function print() {
+  await locko.doWithLock('print', async () => {
+    console.log('First');
+    await wait(100);
+    console.log('Second');
+    await wait(100);
+    console.log('Third');
+  });
+}
+```
