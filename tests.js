@@ -26,17 +26,6 @@ async function addDelayed(arr, key = 'add') {
   await locko.unlock(key);
 }
 
-async function addDelayedWithHelper(arr) {
-  await locko.doWithLock('add', async () => {
-    await wait(10);
-    arr.push(1);
-    await wait(100);
-    arr.push(2);
-    await wait(100);
-    arr.push(3);
-  });
-}
-
 describe('Tests', function() {
   it('Should lock array pushes', async function() {
     const arr = [];
