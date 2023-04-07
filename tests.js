@@ -9,6 +9,10 @@ function wait(ms) {
   });
 }
 
+function triRandom() {
+  return Math.random() * Math.random() * Math.random();
+}
+
 async function addDelayed(arr, key = 'add') {
   await locko.lock(key);
 
@@ -64,5 +68,32 @@ describe('Tests', function() {
 
     assert(arr.length === 1000);
     assert(arr.sort((a, b) => a - b).every((el, i) => el === i));
-  }).timeout(5000);
+  }).timeout(100000);
+
+  it('Survives a chaos test', async function() {
+    const testers = Array(1000).fill(0).map((_, i) => ({
+      startMs: Math.floor(Math.random() * 2500),
+      internalDelayMs: Math.floor(triRandom() * 100),
+      i,
+    }));
+
+    let inLockFunction = false;
+    const arr = [];
+
+    await Promise.all(
+      testers.map(async (tester) => {
+        await wait(tester.startMs);
+        await locko.doWithLock('add', async () => {
+          assert(!inLockFunction);
+          inLockFunction = true;
+          await wait(tester.internalDelayMs);
+          arr.push(tester.i);
+          inLockFunction = false;
+        });
+      }),
+    );
+
+    assert(arr.length === 1000);
+    assert(arr.sort((a, b) => a - b).every((el, i) => el === i));
+  }).timeout(100000);
 });
