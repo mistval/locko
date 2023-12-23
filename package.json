@@ -1,6 +1,6 @@
 {
   "name": "locko",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A simple in-process locking mechanism for critical sections of code.",
   "main": "index.js",
   "scripts": {
